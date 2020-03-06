@@ -14,7 +14,6 @@
 Install graphviz on your host platform.
 ```
 brew install graphviz
-
 ```
 or
 ```
@@ -36,7 +35,7 @@ git clone git@github.com:nakatamixi/spanner-er.git
 cd ./spanner-er
 ./scripts/spanner-er-docker.sh -h
 ```
-In this case, you should use relative path for -s, -o option.
+In this case, you should use relative path for `-s`, `-o` option.
 
 # Usage
 ```
