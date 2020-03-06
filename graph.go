@@ -70,7 +70,7 @@ func (g *Graph) String() string {
 	return g.gvg.String()
 }
 
-func (g *Graph) ApplyTables(tables []spansql.CreateTable) error {
+func (g *Graph) ApplyTables(tables []*spansql.CreateTable) error {
 	groupSize := groupSize(len(tables))
 	if err := g.AddGroups(groupSize); err != nil {
 		return err
@@ -103,7 +103,7 @@ func (g *Graph) AddGroups(size int) error {
 	return nil
 }
 
-func (g *Graph) AddTables(groupSize int, tables []spansql.CreateTable) error {
+func (g *Graph) AddTables(groupSize int, tables []*spansql.CreateTable) error {
 	for i, t := range tables {
 		if t.Interleave != nil {
 			if err := g.AddInterleaveEdge(t.Interleave.Parent, t.Name); err != nil {

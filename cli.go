@@ -22,17 +22,22 @@ type cli struct{}
 
 func (cli *cli) run(args []string) int {
 	var (
+		help   bool
 		file   string
 		output string
 		t      string
 	)
 	flags := flag.NewFlagSet("", flag.ContinueOnError)
+	flags.BoolVar(&help, "h", false, "print help")
 	flags.StringVar(&file, "s", "", "spanner schema file")
 	flags.StringVar(&output, "o", "", "output file name.default is spanner_er.<type>(pass to dot option -o)")
 	flags.StringVar(&t, "T", "png", "output file type. default is png(pass to dot option -T)")
 	if err := flags.Parse(args); err != nil {
-		flags.Usage()
 		return exitCodeArgsError
+	}
+	if help {
+		flags.Usage()
+		return exitCodeOK
 	}
 	if file == "" {
 		flags.Usage()
@@ -81,17 +86,17 @@ func (cli *cli) read(file string) (string, error) {
 
 }
 
-func parse(sqls string) ([]spansql.CreateTable, error) {
+func parse(sqls string) ([]*spansql.CreateTable, error) {
 	// spansql not allow backquote
 	sqls = strings.Replace(sqls, "`", "", -1)
-	d, err := spansql.ParseDDL(sqls)
+	d, err := spansql.ParseDDL("", sqls)
 	if err != nil {
 		return nil, err
 	}
-	tables := []spansql.CreateTable{}
+	tables := []*spansql.CreateTable{}
 	for _, e := range d.List {
 		switch v := e.(type) {
-		case spansql.CreateTable:
+		case *spansql.CreateTable:
 			tables = append(tables, v)
 		}
 	}

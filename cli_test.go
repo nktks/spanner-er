@@ -48,6 +48,11 @@ func Test_run(t *testing.T) {
 			}
 		}
 	})
+	t.Run("help case", func(t *testing.T) {
+		if got, want := cli.run([]string{"-h"}), exitCodeOK; got != want {
+			t.Fatalf("help case exits %d, want %d\n", got, want)
+		}
+	})
 	t.Run("valid case", func(t *testing.T) {
 		output := "testdata/sample.png"
 		if got, want := cli.run([]string{"-s", "testdata/sample.sql", "-o", output}), exitCodeOK; got != want {
