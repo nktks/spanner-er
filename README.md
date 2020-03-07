@@ -30,6 +30,10 @@ go get -u github.com/nakatamixi/spanner-er
 ## Use docker
 you can use docker image
 ```
+docker run --rm -v `pwd`:/go/src/github.com/nakatamixi/spanner-er --workdir="/go/src/github.com/nakatamixi/spanner-er" nakatamixi/spanner-er -h
+```
+or
+```
 git clone git@github.com:nakatamixi/spanner-er.git
 cd ./spanner-er
 ./scripts/spanner-er-docker.sh -h
