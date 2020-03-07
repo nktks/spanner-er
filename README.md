@@ -1,10 +1,7 @@
-# spanner-er
+# spanner-er [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)][license] [![CI Status](https://github.com/nakatamixi/spanner-er/workflows/CI/badge.svg)](https://github.com/nakatamixi/spanner-er/actions)
 
-[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)][license]
 
 [license]: https://github.com/nakatamixi/spanner-er/blob/master/LICENSE
-
-[![CI Status](https://github.com/nakatamixi/spanner-er/workflows/CI/badge.svg)](https://github.com/nakatamixi/spanner-er/actions)
 
 `spanner-er` is a command-line tool to generate ER diagram from DDL schama file.
 
