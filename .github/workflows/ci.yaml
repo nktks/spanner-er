@@ -16,7 +16,7 @@ jobs:
       run: brew install graphviz
       if:  matrix.os == 'macos-latest'
     - name: setup graphviz ubuntu
-      run: apt-get update && apt-get install graphviz --yes
+      run: sudo apt-get update && sudo apt-get install graphviz --yes
       if: matrix.os == 'ubuntu-latest'
     - name: setup Go
       uses: actions/setup-go@v1
