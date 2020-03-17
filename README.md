@@ -54,5 +54,5 @@ Usage:
 ```
 
 # Sample image
-![image](https://user-images.githubusercontent.com/7553415/75993928-8f4c2f80-5f3d-11ea-975b-7144b6777684.png)
+![image](https://user-images.githubusercontent.com/7553415/76856135-f949ca80-6895-11ea-88c2-bee9218ee2c3.png)
 
