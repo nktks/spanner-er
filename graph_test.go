@@ -22,6 +22,50 @@ func Test_AddGroups(t *testing.T) {
 
 }
 
+func Test_AddInterleaveEdge(t *testing.T) {
+	graph, _ := NewGraph()
+	err := graph.AddInterleaveEdge("parent", "child")
+	if err != nil {
+		t.Fatalf("AddInterleaveEdge failed. %s\n", err)
+	}
+}
+
+func Test_AddGroupEdge(t *testing.T) {
+	graph, _ := NewGraph()
+	err := graph.AddGroupEdge("src", "dst")
+	if err != nil {
+		t.Fatalf("AddGroupEdge failed. %s\n", err)
+	}
+}
+
+func Test_AddForeignKeyEdge(t *testing.T) {
+	graph, _ := NewGraph()
+	err := graph.AddForeignKeyEdge("parent", "child", map[string]string{})
+	if err != nil {
+		t.Fatalf("AddForeignKeyEdge failed. %s\n", err)
+	}
+}
+func Test_AddTableNode(t *testing.T) {
+	graph, _ := NewGraph()
+	err := graph.AddTableNode("group", "table", map[string]string{})
+	if err != nil {
+		t.Fatalf("AddTableNode failed. %s\n", err)
+	}
+}
+func Test_AddGroupNode(t *testing.T) {
+	graph, _ := NewGraph()
+	err := graph.AddGroupNode("group")
+	if err != nil {
+		t.Fatalf("AddGroupNode failed. %s\n", err)
+	}
+}
+func Test_AddSubGraph(t *testing.T) {
+	graph, _ := NewGraph()
+	err := graph.AddSubGraph("name")
+	if err != nil {
+		t.Fatalf("AddSubGraph failed. %s\n", err)
+	}
+}
 func Test_groupSize(t *testing.T) {
 	testCases := []struct {
 		arg      int
