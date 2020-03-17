@@ -16,6 +16,7 @@ const (
 
 var (
 	interleaveEdgeAttrs = map[string]string{}
+	foreignKeyEdgeAttrs = map[string]string{}
 	tableNodeAttrs      = map[string]string{}
 	subgraphAttrs       = map[string]string{}
 	groupNodeAttrs      = map[string]string{}
@@ -30,6 +31,14 @@ func init() {
 	interleaveEdgeAttrs["labelangle"] = "32"
 	interleaveEdgeAttrs["labeldistance"] = "1.0"
 	interleaveEdgeAttrs["arrowhead"] = "none"
+	foreignKeyEdgeAttrs["fontsize"] = "10"
+	foreignKeyEdgeAttrs["arrowsize"] = "0.9"
+	foreignKeyEdgeAttrs["penwidth"] = "1.0"
+	foreignKeyEdgeAttrs["labelangle"] = "32"
+	foreignKeyEdgeAttrs["labeldistance"] = "1.0"
+	foreignKeyEdgeAttrs["arrowtail"] = "diamond"
+	foreignKeyEdgeAttrs["style"] = "dotted"
+	foreignKeyEdgeAttrs["dir"] = "back"
 	tableNodeAttrs["shape"] = "\"Mrecord\""
 	tableNodeAttrs["fontsize"] = "10"
 	tableNodeAttrs["margin"] = "\"0.07,0.05\""
@@ -110,6 +119,13 @@ func (g *Graph) AddTables(groupSize int, tables []*spansql.CreateTable) error {
 				return err
 			}
 		}
+		for _, c := range t.Constraints {
+			opt := make(map[string]string)
+			opt["label"] = c.Name
+			if err := g.AddForeignKeyEdge(c.ForeignKey.RefTable, t.Name, opt); err != nil {
+				return err
+			}
+		}
 		colStr := ""
 		for _, c := range t.Columns {
 			pkMark := ""
@@ -138,6 +154,10 @@ func (g *Graph) AddInterleaveEdge(parent, table string) error {
 }
 func (g *Graph) AddGroupEdge(src, dst string) error {
 	return g.addEdge(src, dst, groupEdgeAttrs)
+}
+
+func (g *Graph) AddForeignKeyEdge(parent, table string, opt map[string]string) error {
+	return g.addEdge(parent, table, merge(foreignKeyEdgeAttrs, opt))
 }
 
 func (g *Graph) addEdge(src, dst string, attr map[string]string) error {

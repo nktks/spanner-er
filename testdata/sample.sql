@@ -16,14 +16,6 @@ CREATE TABLE `friends` (
 INTERLEAVE IN PARENT `users` ;
 CREATE UNIQUE INDEX idx_friends_user_id_to_id ON friends (user_id, to_id);
 CREATE  INDEX idx_friends_to_id ON friends (to_id);
-CREATE TABLE user_items (
-  user_item_id STRING(36) NOT NULL,
-  user_id      STRING(36) NOT NULL,
-  item_id      STRING(36) NOT NULL,
-  created_at   TIMESTAMP NOT NULL,
-  updated_at   TIMESTAMP NOT NULL,
-) PRIMARY KEY(user_item_id, user_id),
-  INTERLEAVE IN PARENT users ON DELETE CASCADE;
 CREATE TABLE items (
   item_id      STRING(36) NOT NULL,
   name STRING(MAX) NOT NULL,
@@ -36,5 +28,14 @@ CREATE TABLE item_skus (
   name STRING(MAX) NOT NULL,
   created_at   TIMESTAMP NOT NULL,
   updated_at   TIMESTAMP NOT NULL,
-) PRIMARY KEY(item_sku_id, item_id),
+) PRIMARY KEY(item_id, item_sku_id),
   INTERLEAVE IN PARENT items ON DELETE CASCADE;
+CREATE TABLE user_items (
+  user_item_id STRING(36) NOT NULL,
+  user_id      STRING(36) NOT NULL,
+  item_id      STRING(36) NOT NULL,
+  created_at   TIMESTAMP NOT NULL,
+  updated_at   TIMESTAMP NOT NULL,
+  CONSTRAINT fk_item_id FOREIGN KEY (item_id) REFERENCES items (item_id)
+) PRIMARY KEY(user_id, user_item_id),
+  INTERLEAVE IN PARENT users ON DELETE CASCADE;
