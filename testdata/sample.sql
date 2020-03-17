@@ -22,7 +22,7 @@ CREATE TABLE user_items (
   item_id      STRING(36) NOT NULL,
   created_at   TIMESTAMP NOT NULL,
   updated_at   TIMESTAMP NOT NULL,
-) PRIMARY KEY(user_item_id, user_id),
+) PRIMARY KEY(user_id, user_item_id),
   INTERLEAVE IN PARENT users ON DELETE CASCADE;
 CREATE TABLE items (
   item_id      STRING(36) NOT NULL,
@@ -36,5 +36,5 @@ CREATE TABLE item_skus (
   name STRING(MAX) NOT NULL,
   created_at   TIMESTAMP NOT NULL,
   updated_at   TIMESTAMP NOT NULL,
-) PRIMARY KEY(item_sku_id, item_id),
+) PRIMARY KEY(item_id, item_sku_id),
   INTERLEAVE IN PARENT items ON DELETE CASCADE;
