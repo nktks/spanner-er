@@ -19,11 +19,9 @@ jobs:
       run: sudo apt-get update && sudo apt-get install graphviz --yes
       if: matrix.os == 'ubuntu-latest'
     - name: setup Go
-      uses: actions/setup-go@v1
+      uses: actions/setup-go@v2
       with:
         go-version: 1.x
-    - name: add $GOPATH/bin to $PATH
-      run: echo "::add-path::$(go env GOPATH)/bin"
     - name: go test
       run: go test -v -race ./...
     - name: go vet
