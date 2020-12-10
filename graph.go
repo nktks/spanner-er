@@ -121,7 +121,9 @@ func (g *Graph) AddTables(groupSize int, tables []*spansql.CreateTable) error {
 		}
 		for _, c := range t.Constraints {
 			opt := make(map[string]string)
-			opt["label"] = c.Name
+			if c.Name != "" {
+				opt["label"] = c.Name
+			}
 			if err := g.AddForeignKeyEdge(c.ForeignKey.RefTable, t.Name, opt); err != nil {
 				return err
 			}
