@@ -1,7 +1,7 @@
-# spanner-er [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)][license] [![CI Status](https://github.com/nakatamixi/spanner-er/workflows/CI/badge.svg)](https://github.com/nakatamixi/spanner-er/actions)
+# spanner-er [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)][license] [![CI Status](https://github.com/nktks/spanner-er/workflows/CI/badge.svg)](https://github.com/nktks/spanner-er/actions)
 
 
-[license]: https://github.com/nakatamixi/spanner-er/blob/master/LICENSE
+[license]: https://github.com/nktks/spanner-er/blob/master/LICENSE
 
 `spanner-er` is a command-line tool to generate ER diagram from DDL schama file.
 
@@ -24,17 +24,17 @@ apt-get update && apt-get install graphviz
 ```
 Install spanner-er
 ```
-go get -u github.com/nakatamixi/spanner-er
+go get -u github.com/nktks/spanner-er
 ```
 
 ## Use docker
 you can use docker image
 ```
-docker run --rm -v `pwd`:/go/src/github.com/nakatamixi/spanner-er --workdir="/go/src/github.com/nakatamixi/spanner-er" nakatamixi/spanner-er -h
+docker run --rm -v `pwd`:/go/src/github.com/nktks/spanner-er --workdir="/go/src/github.com/nktks/spanner-er" nktks/spanner-er -h
 ```
 or
 ```
-git clone git@github.com:nakatamixi/spanner-er.git
+git clone git@github.com:nktks/spanner-er.git
 cd ./spanner-er
 ./scripts/spanner-er-docker.sh -h
 ```
