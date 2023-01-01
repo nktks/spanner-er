@@ -26,6 +26,7 @@ CREATE TABLE item_skus (
   item_sku_id      STRING(36) NOT NULL,
   item_id      STRING(36) NOT NULL,
   name STRING(MAX) NOT NULL,
+  attributes JSON,
   created_at   TIMESTAMP NOT NULL,
   updated_at   TIMESTAMP NOT NULL,
 ) PRIMARY KEY(item_id, item_sku_id),

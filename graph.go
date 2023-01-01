@@ -122,10 +122,13 @@ func (g *Graph) AddTables(groupSize int, tables []*spansql.CreateTable) error {
 		for _, c := range t.Constraints {
 			opt := make(map[string]string)
 			if c.Name != "" {
-				opt["label"] = c.Name
+				opt["label"] = string(c.Name)
 			}
-			if err := g.AddForeignKeyEdge(c.ForeignKey.RefTable, t.Name, opt); err != nil {
-				return err
+			switch cc := c.Constraint.(type) {
+			case spansql.ForeignKey:
+				if err := g.AddForeignKeyEdge(cc.RefTable, t.Name, opt); err != nil {
+					return err
+				}
 			}
 		}
 		colStr := ""
@@ -151,22 +154,22 @@ func (g *Graph) AddTables(groupSize int, tables []*spansql.CreateTable) error {
 	return nil
 }
 
-func (g *Graph) AddInterleaveEdge(parent, table string) error {
-	return g.addEdge(parent, table, interleaveEdgeAttrs)
+func (g *Graph) AddInterleaveEdge(parent, table spansql.ID) error {
+	return g.addEdge(string(parent), string(table), interleaveEdgeAttrs)
 }
 func (g *Graph) AddGroupEdge(src, dst string) error {
 	return g.addEdge(src, dst, groupEdgeAttrs)
 }
 
-func (g *Graph) AddForeignKeyEdge(parent, table string, opt map[string]string) error {
-	return g.addEdge(parent, table, merge(foreignKeyEdgeAttrs, opt))
+func (g *Graph) AddForeignKeyEdge(parent, table spansql.ID, opt map[string]string) error {
+	return g.addEdge(string(parent), string(table), merge(foreignKeyEdgeAttrs, opt))
 }
 
 func (g *Graph) addEdge(src, dst string, attr map[string]string) error {
 	return g.gvg.AddEdge(src, dst, true, attr)
 }
-func (g *Graph) AddTableNode(groupName, table string, opt map[string]string) error {
-	return g.addNode(groupName, table, merge(tableNodeAttrs, opt))
+func (g *Graph) AddTableNode(groupName string, table spansql.ID, opt map[string]string) error {
+	return g.addNode(groupName, string(table), merge(tableNodeAttrs, opt))
 }
 func (g *Graph) AddGroupNode(groupName string) error {
 	return g.addNode(rootGraphName, groupName, groupNodeAttrs)
