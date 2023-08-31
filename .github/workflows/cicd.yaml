@@ -45,7 +45,9 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build --tag ghcr.io/nktks/spanner-er:$(echo $GITHUB_SHA | head -c7) \
+          --tag ghcr.io/nktks/spanner-er:latest \
           .
       - name: Push Docker Image
         run: |
           docker push ghcr.io/nktks/spanner-er:$(echo $GITHUB_SHA | head -c7)
+          docker push ghcr.io/nktks/spanner-er:latest
