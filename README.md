@@ -30,7 +30,7 @@ go get -u github.com/nktks/spanner-er
 ## Use docker
 you can use docker image
 ```
-docker run --rm -v `pwd`:/go/src/github.com/nktks/spanner-er --workdir="/go/src/github.com/nktks/spanner-er" nktks/spanner-er -h
+docker run --rm -v `pwd`:/go/src/github.com/nktks/spanner-er --workdir="/go/src/github.com/nktks/spanner-er" ghcr.io/nktks/spanner-er -h
 ```
 or
 ```
