@@ -1,0 +1,28 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    branches: [main]
+    types:
+      - completed
+jobs:
+  cd:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    name: push to ghcr
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: nktks
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build Docker Image
+        run: |
+          docker build --tag ghcr.io/nktks/spanner-er:$(echo $GITHUB_SHA | head -c7) \
+          .
+      - name: Push Docker Image
+        run: |
+          docker push ghcr.io/nktks/spanner-er:$(echo $GITHUB_SHA | head -c7)
