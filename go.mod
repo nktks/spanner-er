@@ -1,4 +1,4 @@
-module github.com/nakatamixi/spanner-er
+module github.com/nktks/spanner-er
 
 go 1.14
 
