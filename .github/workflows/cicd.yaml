@@ -1,0 +1,51 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - '**'
+jobs:
+  test:
+    name: test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+    - name: checkout code
+      uses: actions/checkout@master
+    - name: setup graphviz macos
+      run: brew install graphviz
+      if:  matrix.os == 'macos-latest'
+    - name: setup graphviz ubuntu
+      run: sudo apt-get update && sudo apt-get install graphviz --yes
+      if: matrix.os == 'ubuntu-latest'
+    - name: setup Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.x
+    - name: go test
+      run: go test -v -race ./...
+    - name: go vet
+      run: go vet ./...
+  cd:
+    name: push to ghcr
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    needs:
+      - test
+    steps:
+      - uses: actions/checkout@v3
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: nktks
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build Docker Image
+        run: |
+          docker build --tag ghcr.io/nktks/spanner-er:$(echo $GITHUB_SHA | head -c7) \
+          .
+      - name: Push Docker Image
+        run: |
+          docker push ghcr.io/nktks/spanner-er:$(echo $GITHUB_SHA | head -c7)
