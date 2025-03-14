@@ -8,7 +8,9 @@ import (
 	"os/exec"
 	"strings"
 
-	"cloud.google.com/go/spanner/spansql"
+	"github.com/cloudspannerecosystem/memefish"
+	"github.com/cloudspannerecosystem/memefish/ast"
+	"github.com/cloudspannerecosystem/memefish/token"
 )
 
 const (
@@ -56,6 +58,10 @@ func (cli *cli) run(args []string) int {
 		log.Print(err)
 		return exitCodeError
 	}
+	log.Printf("Parsed %d tables", len(tables))
+	for i, t := range tables {
+		log.Printf("Table %d: %s", i, getTableName(t))
+	}
 	graph, err := NewGraph()
 	if err != nil {
 		log.Print(err)
@@ -67,11 +73,19 @@ func (cli *cli) run(args []string) int {
 		return exitCodeError
 	}
 	s := graph.String()
+	log.Printf("Graph DOT content: %s", s)
 	r := strings.NewReader(s)
 	c := exec.Command("dot", fmt.Sprintf("-T%s", t), "-o", output)
 	c.Stdin = r
-	c.Start()
-	c.Wait()
+	var stderr strings.Builder
+	c.Stderr = &stderr
+	err = c.Run()
+	if err != nil {
+		log.Printf("Error running dot command: %v", err)
+		log.Printf("Stderr: %s", stderr.String())
+		return exitCodeError
+	}
+	log.Printf("Output file created: %s", output)
 
 	return exitCodeOK
 }
@@ -86,19 +100,55 @@ func (cli *cli) read(file string) (string, error) {
 
 }
 
-func parse(sqls string) ([]*spansql.CreateTable, error) {
-	// spansql not allow backquote
-	sqls = strings.Replace(sqls, "`", "", -1)
-	d, err := spansql.ParseDDL("", sqls)
-	if err != nil {
-		return nil, err
-	}
-	tables := []*spansql.CreateTable{}
-	for _, e := range d.List {
-		switch v := e.(type) {
-		case *spansql.CreateTable:
-			tables = append(tables, v)
+func parse(sqls string) ([]*ast.CreateTable, error) {
+	// Log the original SQL for debugging
+	log.Printf("Original SQL: %s", sqls)
+
+	// Split the SQL by semicolons to get individual statements
+	statements := strings.Split(sqls, ";")
+
+	var tables []*ast.CreateTable
+	for _, stmt := range statements {
+		// Skip empty statements
+		stmt = strings.TrimSpace(stmt)
+		if stmt == "" {
+			continue
+		}
+
+		// Log each statement for debugging
+		log.Printf("Parsing statement: %s", stmt)
+
+		// Create a new Parser instance for each statement
+		file := &token.File{
+			Buffer: stmt,
+		}
+		p := &memefish.Parser{
+			Lexer: &memefish.Lexer{File: file},
+		}
+
+		// Parse the statement
+		parsedStmt, err := p.ParseStatement()
+		if err != nil {
+			log.Printf("Error parsing statement: %v", err)
+			continue
+		}
+
+		// If it's a CREATE TABLE statement, add it to our list
+		if createTable, ok := parsedStmt.(*ast.CreateTable); ok {
+			log.Printf("Found CREATE TABLE: %s", getTableName(createTable))
+			tables = append(tables, createTable)
+		} else {
+			log.Printf("Statement is not a CREATE TABLE: %T", parsedStmt)
 		}
 	}
+
 	return tables, nil
+}
+
+// Helper function to get the name from a CreateTable
+func getTableName(t *ast.CreateTable) string {
+	if t.Name != nil && len(t.Name.Idents) > 0 {
+		return t.Name.Idents[len(t.Name.Idents)-1].Name
+	}
+	return ""
 }
