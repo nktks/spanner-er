@@ -1,4 +1,4 @@
-FROM golang:1.14-alpine3.11 as builder
+FROM golang:1.23-alpine as builder
 
 WORKDIR /go/src/github.com/nktks/spanner-er
 
@@ -7,6 +7,6 @@ RUN apk add --no-cache git graphviz ttf-freefont &&\
     go mod download
 
 COPY . .
-RUN go build -i -o /bin/spanner-er  ./
+RUN go build -o /bin/spanner-er  ./
 
 ENTRYPOINT ["/bin/spanner-er"]

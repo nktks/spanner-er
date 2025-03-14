@@ -6,8 +6,8 @@ import (
 	"math"
 	"strings"
 
-	"cloud.google.com/go/spanner/spansql"
 	"github.com/awalterschulze/gographviz"
+	"github.com/cloudspannerecosystem/memefish/ast"
 )
 
 const (
@@ -79,7 +79,7 @@ func (g *Graph) String() string {
 	return g.gvg.String()
 }
 
-func (g *Graph) ApplyTables(tables []*spansql.CreateTable) error {
+func (g *Graph) ApplyTables(tables []*ast.CreateTable) error {
 	groupSize := groupSize(len(tables))
 	if err := g.AddGroups(groupSize); err != nil {
 		return err
@@ -112,71 +112,126 @@ func (g *Graph) AddGroups(size int) error {
 	return nil
 }
 
-func (g *Graph) AddTables(groupSize int, tables []*spansql.CreateTable) error {
+func (g *Graph) AddTables(groupSize int, tables []*ast.CreateTable) error {
 	for i, t := range tables {
-		if t.Interleave != nil {
-			if err := g.AddInterleaveEdge(t.Interleave.Parent, t.Name); err != nil {
+		// Handle interleave
+		if t.Cluster != nil {
+			// Get the parent table name from the Path
+			parentName := getPathName(t.Cluster.TableName)
+			tableName := getPathName(t.Name)
+			if err := g.AddInterleaveEdge(parentName, tableName); err != nil {
 				return err
 			}
 		}
-		for _, c := range t.Constraints {
+
+		// Handle constraints
+		for _, c := range t.TableConstraints {
 			opt := make(map[string]string)
-			if c.Name != "" {
-				opt["label"] = string(c.Name)
+			if c.Name != nil {
+				opt["label"] = c.Name.Name
 			}
-			switch cc := c.Constraint.(type) {
-			case spansql.ForeignKey:
-				if err := g.AddForeignKeyEdge(cc.RefTable, t.Name, opt); err != nil {
+
+			// Handle foreign key constraints
+			if fk, ok := c.Constraint.(*ast.ForeignKey); ok {
+				refTableName := getPathName(fk.ReferenceTable)
+				tableName := getPathName(t.Name)
+				if err := g.AddForeignKeyEdge(refTableName, tableName, opt); err != nil {
 					return err
 				}
 			}
 		}
+
+		// Handle columns
 		colStr := ""
 		for _, c := range t.Columns {
 			pkMark := ""
-			for _, pk := range t.PrimaryKey {
-				if pk.Column == c.Name {
-					pkMark = "* "
-					continue
+			// Check if column is part of primary key
+			if t.PrimaryKeys != nil {
+				for _, pk := range t.PrimaryKeys {
+					if pk.Name.Name == c.Name.Name {
+						pkMark = "* "
+						break
+					}
 				}
 			}
-			typeSQL := c.Type.SQL()
-			typeSQL = strings.Replace(typeSQL, ">", "\\>", 1)
-			typeSQL = strings.Replace(typeSQL, "<", "\\<", 1)
-			colStr = colStr + fmt.Sprintf("%s%s (%s)\\l", pkMark, c.Name, typeSQL)
+
+			// Get type string
+			typeStr := getSchemaTypeString(c.Type)
+			typeStr = strings.Replace(typeStr, ">", "\\>", -1)
+			typeStr = strings.Replace(typeStr, "<", "\\<", -1)
+
+			colStr = colStr + fmt.Sprintf("%s%s (%s)\\l", pkMark, c.Name.Name, typeStr)
 		}
+
 		opt := make(map[string]string)
-		opt["label"] = fmt.Sprintf("\"{%s|%s}\"", t.Name, colStr)
-		if err := g.AddTableNode(groupName(int(math.Mod(float64(i), float64(groupSize)))+1), t.Name, opt); err != nil {
+		tableName := getPathName(t.Name)
+		opt["label"] = fmt.Sprintf("\"{%s|%s}\"", tableName, colStr)
+		if err := g.AddTableNode(groupName(int(math.Mod(float64(i), float64(groupSize)))+1), tableName, opt); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (g *Graph) AddInterleaveEdge(parent, table spansql.ID) error {
-	return g.addEdge(string(parent), string(table), interleaveEdgeAttrs)
+// Helper function to get the name from a Path
+func getPathName(path *ast.Path) string {
+	if len(path.Idents) > 0 {
+		return path.Idents[len(path.Idents)-1].Name
+	}
+	return ""
 }
+
+// Helper function to convert memefish SchemaType to string
+func getSchemaTypeString(t ast.SchemaType) string {
+	switch typ := t.(type) {
+	case *ast.ScalarSchemaType:
+		return string(typ.Name)
+	case *ast.SizedSchemaType:
+		if typ.Max {
+			return fmt.Sprintf("%s(MAX)", typ.Name)
+		}
+		// Handle the Size field based on its actual type
+		switch size := typ.Size.(type) {
+		case *ast.IntLiteral:
+			return fmt.Sprintf("%s(%s)", typ.Name, size.Value)
+		default:
+			return fmt.Sprintf("%s(%s)", typ.Name, "?")
+		}
+	case *ast.ArraySchemaType:
+		return fmt.Sprintf("ARRAY<%s>", getSchemaTypeString(typ.Item))
+	default:
+		return fmt.Sprintf("%T", t)
+	}
+}
+
+func (g *Graph) AddInterleaveEdge(parent, table string) error {
+	return g.addEdge(parent, table, interleaveEdgeAttrs)
+}
+
 func (g *Graph) AddGroupEdge(src, dst string) error {
 	return g.addEdge(src, dst, groupEdgeAttrs)
 }
 
-func (g *Graph) AddForeignKeyEdge(parent, table spansql.ID, opt map[string]string) error {
-	return g.addEdge(string(parent), string(table), merge(foreignKeyEdgeAttrs, opt))
+func (g *Graph) AddForeignKeyEdge(parent, table string, opt map[string]string) error {
+	return g.addEdge(parent, table, merge(foreignKeyEdgeAttrs, opt))
 }
 
 func (g *Graph) addEdge(src, dst string, attr map[string]string) error {
 	return g.gvg.AddEdge(src, dst, true, attr)
 }
-func (g *Graph) AddTableNode(groupName string, table spansql.ID, opt map[string]string) error {
-	return g.addNode(groupName, string(table), merge(tableNodeAttrs, opt))
+
+func (g *Graph) AddTableNode(groupName string, table string, opt map[string]string) error {
+	return g.addNode(groupName, table, merge(tableNodeAttrs, opt))
 }
+
 func (g *Graph) AddGroupNode(groupName string) error {
 	return g.addNode(rootGraphName, groupName, groupNodeAttrs)
 }
+
 func (g *Graph) addNode(parentGraph, name string, attr map[string]string) error {
 	return g.gvg.AddNode(parentGraph, name, attr)
 }
+
 func (g *Graph) AddSubGraph(name string) error {
 	return g.gvg.AddSubGraph(rootGraphName, name, subgraphAttrs)
 }
