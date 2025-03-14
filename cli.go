@@ -58,10 +58,6 @@ func (cli *cli) run(args []string) int {
 		log.Print(err)
 		return exitCodeError
 	}
-	log.Printf("Parsed %d tables", len(tables))
-	for i, t := range tables {
-		log.Printf("Table %d: %s", i, getTableName(t))
-	}
 	graph, err := NewGraph()
 	if err != nil {
 		log.Print(err)
@@ -73,19 +69,11 @@ func (cli *cli) run(args []string) int {
 		return exitCodeError
 	}
 	s := graph.String()
-	log.Printf("Graph DOT content: %s", s)
 	r := strings.NewReader(s)
 	c := exec.Command("dot", fmt.Sprintf("-T%s", t), "-o", output)
 	c.Stdin = r
-	var stderr strings.Builder
-	c.Stderr = &stderr
-	err = c.Run()
-	if err != nil {
-		log.Printf("Error running dot command: %v", err)
-		log.Printf("Stderr: %s", stderr.String())
-		return exitCodeError
-	}
-	log.Printf("Output file created: %s", output)
+	c.Start()
+	c.Wait()
 
 	return exitCodeOK
 }
@@ -101,9 +89,6 @@ func (cli *cli) read(file string) (string, error) {
 }
 
 func parse(sqls string) ([]*ast.CreateTable, error) {
-	// Log the original SQL for debugging
-	log.Printf("Original SQL: %s", sqls)
-
 	// Split the SQL by semicolons to get individual statements
 	statements := strings.Split(sqls, ";")
 
@@ -114,9 +99,6 @@ func parse(sqls string) ([]*ast.CreateTable, error) {
 		if stmt == "" {
 			continue
 		}
-
-		// Log each statement for debugging
-		log.Printf("Parsing statement: %s", stmt)
 
 		// Create a new Parser instance for each statement
 		file := &token.File{
@@ -129,16 +111,12 @@ func parse(sqls string) ([]*ast.CreateTable, error) {
 		// Parse the statement
 		parsedStmt, err := p.ParseStatement()
 		if err != nil {
-			log.Printf("Error parsing statement: %v", err)
 			continue
 		}
 
 		// If it's a CREATE TABLE statement, add it to our list
 		if createTable, ok := parsedStmt.(*ast.CreateTable); ok {
-			log.Printf("Found CREATE TABLE: %s", getTableName(createTable))
 			tables = append(tables, createTable)
-		} else {
-			log.Printf("Statement is not a CREATE TABLE: %T", parsedStmt)
 		}
 	}
 

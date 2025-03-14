@@ -80,7 +80,6 @@ func (g *Graph) String() string {
 }
 
 func (g *Graph) ApplyTables(tables []*ast.CreateTable) error {
-	log.Printf("Applying %d tables to graph", len(tables))
 	groupSize := groupSize(len(tables))
 	if err := g.AddGroups(groupSize); err != nil {
 		return err
@@ -89,7 +88,6 @@ func (g *Graph) ApplyTables(tables []*ast.CreateTable) error {
 		log.Print(err)
 		return err
 	}
-	log.Printf("Graph generated: %s", g.String())
 	return nil
 }
 
